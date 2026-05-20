@@ -30,7 +30,7 @@ export default function LightSpeed({ playing, onScore, onGameOver }: Props) {
     if (!mount) return;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x05020f, 0.012);
+    scene.fog = new THREE.FogExp2(0x05020f, 0.006);
 
     const camera = new THREE.PerspectiveCamera(
       72,
@@ -241,16 +241,17 @@ export default function LightSpeed({ playing, onScore, onGameOver }: Props) {
     };
     const asteroids: Asteroid[] = [];
     const asteroidMat = new THREE.MeshStandardMaterial({
-      color: 0x8a7a6a,
-      metalness: 0.2,
-      roughness: 0.95,
+      color: 0xc9b89a,
+      emissive: 0x3a2a1a,
+      emissiveIntensity: 0.6,
+      metalness: 0.15,
+      roughness: 0.85,
       flatShading: true,
     });
 
-    const spawnAsteroid = () => {
+    const spawnAsteroid = (currentTime: number) => {
       const r = 0.35 + Math.random() * 0.9;
       const geo = new THREE.IcosahedronGeometry(r, 0);
-      // Deform vertices for irregular look
       const pos = geo.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < pos.count; i++) {
         const f = 1 + (Math.random() - 0.5) * 0.45;
@@ -258,13 +259,15 @@ export default function LightSpeed({ playing, onScore, onGameOver }: Props) {
       }
       geo.computeVertexNormals();
       const mesh = new THREE.Mesh(geo, asteroidMat);
-      // Spawn within play area — bias toward ship's reachable region
+      // Spawn closer so they're visible earlier
       mesh.position.set(
         (Math.random() - 0.5) * 8,
         (Math.random() - 0.5) * 4.5 - 0.4,
-        -180 - Math.random() * 40
+        -110 - Math.random() * 30
       );
       scene.add(mesh);
+      // Speed ramps with gameTime: starts slow, gets faster
+      const baseSpeed = 14 + Math.min(currentTime * 0.9, 36);
       asteroids.push({
         mesh,
         spin: new THREE.Vector3(
@@ -272,7 +275,7 @@ export default function LightSpeed({ playing, onScore, onGameOver }: Props) {
           (Math.random() - 0.5) * 2,
           (Math.random() - 0.5) * 2
         ),
-        speed: 40 + Math.random() * 30,
+        speed: baseSpeed + Math.random() * 8,
         radius: r,
       });
     };
@@ -390,12 +393,12 @@ export default function LightSpeed({ playing, onScore, onGameOver }: Props) {
         gameTime += dt;
         onScoreRef.current(Math.floor(gameTime * 100));
 
-        // Spawn rate scales with time
-        const spawnInterval = Math.max(0.15, 0.55 - gameTime * 0.01);
+        // Spawn rate ramps: very chill at first, intense later
+        const spawnInterval = Math.max(0.18, 1.2 - gameTime * 0.022);
         spawnTimer += dt;
         while (spawnTimer > spawnInterval) {
           spawnTimer -= spawnInterval;
-          spawnAsteroid();
+          spawnAsteroid(gameTime);
         }
       } else {
         // Idle drift
