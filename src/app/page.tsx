@@ -23,7 +23,7 @@ export default function Home() {
           </h1>
           <p className="mt-6 max-w-xl text-base text-white/60 sm:text-lg">
             Strap in. We&apos;re punching through the dark — past stars, past
-            time, past everything you thought was the edge.
+            time, past everything you thought was the edge. TEST
           </p>
           <div className="mt-10 flex gap-4">
             <button className="rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-white/90">
